@@ -1,0 +1,36 @@
+#pragma kernel CSMain
+
+RWStructuredBuffer<float> _VoxelBuffer;
+float3 _BoundsMin;
+float _VoxelSize;
+float _SurfaceThreshold;
+int3 _GridSize;
+
+bool Raycast(float3 origin, float3 direction)
+{
+    Ray ray = { origin, direction };
+    RaycastHit hit;
+    return Physics.Raycast(ray, out hit, _VoxelSize * 2);
+}
+
+[numthreads(8,8,8)]
+void CSMain (uint3 id : SV_DispatchThreadID)
+{
+    float3 worldPos = _BoundsMin + float3(id) * _VoxelSize;
+    float3 directions[6] = {
+        float3(1,0,0), float3(-1,0,0),
+        float3(0,1,0), float3(0,-1,0),
+        float3(0,0,1), float3(0,0,-1)
+    };
+
+    int hitCount = 0;
+    for(int i = 0; i < 6; i++)
+    {
+        if(Raycast(worldPos, directions[i]))
+            hitCount++;
+    }
+
+    float density = saturate(hitCount / 6.0);
+    _VoxelBuffer[id.x + id.y * _GridSize.x + id.z * _GridSize.x * _GridSize.y] = 
+        step(_SurfaceThreshold, density);
+}
