@@ -1,18 +1,25 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class ECGBeep : MonoBehaviour
 {
-    // Start is called before the first frame update
+    public float bpm = 72f;
+    public AudioSource beep;
+
+    float timer;
+    float interval;
+
     void Start()
     {
-        
+        interval = 60f / bpm;
     }
 
-    // Update is called once per frame
     void Update()
     {
-        
+        timer += Time.deltaTime;
+        if (timer >= interval)
+        {
+            timer = 0f;
+            beep.Play();
+        }
     }
 }
